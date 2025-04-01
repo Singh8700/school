@@ -4,6 +4,8 @@ import Image from 'next/image'
 import styled from 'styled-components'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaGraduationCap, FaBook, FaChalkboardTeacher, FaSchool, FaPhone } from 'react-icons/fa'
+import TeachersPage from './Tearchers/page'
+import FacilitiesPage from './facilities/page'
 
 const MainContainer = styled(motion.div)`
   min-height: 100vh;
@@ -14,20 +16,32 @@ const HeroContainer = styled.div`
   position: relative;
   height: 100vh;
   width: 100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+ 
 `
 
 const ImageContainer = styled(motion.div)`
   position: absolute;
+
   inset: 0;
 `
 
 const ContentOverlay = styled.div`
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   padding: 0 4rem;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  backdrop-filter: blur(10px);
 `
 
 const HeroContent = styled.div`
@@ -206,7 +220,7 @@ export default function Home() {
       transition={{ duration: 0.5 }}
     >
       {/* Hero Section */}
-      <HeroContainer>
+      <HeroContainer id="home-section">
         <AnimatePresence mode='wait'>
           {heroImages.map((image, index) => (
             index === currentImageIndex && (
@@ -230,7 +244,7 @@ export default function Home() {
         </AnimatePresence>
         
         <ContentOverlay>
-          <HeroContent>
+          <HeroContent >
             <Title
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -256,13 +270,13 @@ export default function Home() {
       </HeroContainer>
 
       {/* About Section */}
-      <Section>
+      <Section id="about-section">
         <SectionContent
           initial={{ y: 50, opacity: 0 }}
           whileInView={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-        >
+         >
           <SectionTitle>About Our School</SectionTitle>
           <Grid>
             <GridItem>
@@ -314,7 +328,8 @@ export default function Home() {
           </FeatureGrid>
         </SectionContent>
       </Section>
-
+      <TeachersPage/>
+      <FacilitiesPage/>
     </MainContainer>
   )
 }

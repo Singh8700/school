@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import {useState} from "react";
 import styled from "styled-components";
 import { motion } from "framer-motion";
 import { FaHeart, FaCoffee } from "react-icons/fa";
@@ -50,6 +50,11 @@ const SectionTitle = styled.h3`
 const SectionItem = styled.p`
   margin: 5px 0;
   color: #f8f9fa;
+  cursor: pointer;
+  a{
+    text-decoration: none;
+    color: #f8f9fa;
+  }
 `;
 
 const FooterBottom = styled.div`
@@ -113,8 +118,17 @@ const SocialIcons = styled(motion.div)`
   }
 `;
 
-
 const FooterPage = () => {
+  const [activeSection, setActiveSection] = useState(null);
+
+  const handleQuickLinkClick = (sectionId) => {
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+      setActiveSection(sectionId); // Optionally set an active section
+    }
+  };
+
   return (
     <FooterContainer
       initial={{ opacity: 0 }}
@@ -122,22 +136,27 @@ const FooterPage = () => {
       transition={{ duration: 1 }}
     >
       <SectionsContainer>
-      <Section>
+        <Section>
           <SectionTitle>About KD Public School</SectionTitle>
           <SectionItem>Providing quality education since 2000, nurturing students for a better future.</SectionItem>
         </Section>
+
         <Section>
           <SectionTitle>Quick Links</SectionTitle>
-          <SectionItem>Home</SectionItem>
-          <SectionItem>About Us</SectionItem>
-          <SectionItem>Contact</SectionItem>
+          <SectionItem><span onClick={() => handleQuickLinkClick("home-section")}>Home</span></SectionItem>
+          <SectionItem><span onClick={() => handleQuickLinkClick("about-section")}>About Us</span></SectionItem>
+          <SectionItem><Link href="/academics">Academics</Link></SectionItem>
+          <SectionItem><span onClick={() => handleQuickLinkClick("facilities-section")}>Facilities</span></SectionItem>
+          <SectionItem><span onClick={() => handleQuickLinkClick("teachers-section")}>Teachers</span></SectionItem>
         </Section>
+
         <Section>
           <SectionTitle>Academics</SectionTitle>
           <SectionItem>Primary Education</SectionItem>
           <SectionItem>Secondary Education</SectionItem>
           <SectionItem>Extracurricular Activities</SectionItem>
         </Section>
+
         <Section>
           <SectionTitle>Contact Info</SectionTitle>
           <SectionItem><FaPhone /> +91 98765 43210</SectionItem>

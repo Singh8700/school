@@ -10,7 +10,11 @@ width:100vw;
   background-color: #121212; /* Black background for dark theme */
   color: #f4f4f4;
   margin:0 auto;
-  min-height: 100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center; 
+  // min-height: 100vh;
   padding-top:8rem;
   font-family: 'Poppins', sans-serif;
   transition: all 0.3s ease;
@@ -130,7 +134,7 @@ const SectionAnimation = {
 // Academics page component
 const AcademicsPage = () => {
   return (
-    <AcademicsContainer>
+    <AcademicsContainer id="academics-section">
       {/* Introduction Section */}
       <IntroSection>
         <motion.h1
