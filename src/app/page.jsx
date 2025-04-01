@@ -194,10 +194,10 @@ const ContactForm = styled(motion.form)`
 `
 
 const heroImages = [
-  '/images/school1.png',
-  '/images/school2.png',
-  '/images/school3.png',
-  '/images/school4.jpg',
+  '/school/images/school1.png',
+  '/school/images/school2.png',
+  '/school/images/school3.png',
+  '/school/images/school4.jpg',
 ]
 
 export default function Home() {
