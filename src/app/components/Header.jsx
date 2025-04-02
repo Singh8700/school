@@ -1,8 +1,10 @@
-'use client'
+"use client"
 import { useState } from 'react'
 import styled from 'styled-components'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaBars, FaTimes } from 'react-icons/fa'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 const HeaderContainer = styled.header`
   position: fixed;
@@ -47,12 +49,15 @@ const MenuButton = styled.button`
 const NavLinks = styled(motion.div)`
   display: flex;
   gap: 2rem;
-  
+  justify-content: center;
+  align-items: center;
   @media (max-width: 768px) {
     display: none;
     
     &.mobile {
       display: flex;
+      justify-content: flex-start;
+      align-items: flex-start;
       flex-direction: column;
       position: fixed;
       top: 70px;
@@ -77,17 +82,45 @@ const NavLink = styled(motion.a)`
     color: #2563eb;
   }
 `
+const LoginButton = styled.button`
+  background: #2563eb;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  line-height:1em;
+  &:hover {
+    background: #1d4ed8;
+  }
+    a{
+    text-decoration: none;
+    color:#fff;
+    }
+`
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const pathName = usePathname()
 
   const menuItems = [
-    { title: 'Home', href: '#' },
+    { title: 'Home', href: '/' },
     { title: 'About', href: '/about' },
     { title: 'Academics', href: '/academics' },
     // { title: 'Facilities', href: '/facilities' },
     // { title: 'Contact', href: '/contact' }
   ]
+  // console.log("pathanme",pathName)
+  // logout function
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/logout'); // Logout API Call
+      alert('Logged out successfully!');
+      router.push('/login'); // Logout के बाद login page पर redirect
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   return (
     <HeaderContainer>
@@ -118,6 +151,7 @@ export default function Header() {
               {item.title}
             </NavLink>
           ))}
+          <LoginButton>Sing In</LoginButton>
         </NavLinks>
 
         {/* Mobile Menu Button */}
@@ -149,6 +183,11 @@ export default function Header() {
                   {item.title}
                 </NavLink>
               ))}
+               {pathName === '/admin'?<LoginButton>
+              <Link href="/" onClick={handleLogout}>Logout</Link>
+            </LoginButton>:<LoginButton>
+            <Link href="/admin/login">Login</Link>
+          </LoginButton>}
             </NavLinks>
           )}
         </AnimatePresence>

@@ -24,7 +24,7 @@ const AboutContainer = styled.div`
 
 // Section for general content with dark background
 const AboutSection = styled.section`
-  width: 80%;
+  width: 95%;
   dispaly:flex;
   justify-content:center;
   align-items:center;
