@@ -5,7 +5,7 @@ import Header from './components/Header'
 import FooterPage from './Footer/page'
 import Navbar from "./components/navBar/page"
 
-const inter = Inter({ subsets: ['latin'] })
+
 
 export const metadata = {
   title: 'KD Public School',
@@ -15,7 +15,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body>
         <StyledComponentsRegistry>
           <Header />
           <main className="min-h-screen bg-white">
