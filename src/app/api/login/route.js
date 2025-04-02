@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import connectDB from "@/db/config";
 import Admin from "@/models/userModel";
 import jwt from "jsonwebtoken";
-import { redirect } from "next/navigation";
+// import { redirect } from "next/navigation";
+import applyCors  from '@/app/lib/cors';
 
 export async function POST(req) {
+    
     try {
+        await applyCors(req)
         await connectDB(); // ✅ Ensure DB Connection
         const body = await req.json(); // ✅ Parse Request Body
         const { email, password } = body;

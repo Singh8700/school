@@ -2,9 +2,12 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import connectDB from '@/db/config';
 import Admin from '@/models/userModel';
+import  applyCors  from '@/app/lib/cors';
 
 export async function POST(req) {
+  
   try {
+    await applyCors(req);
     await connectDB();
     const { email, password } = await req.json();
 
