@@ -151,7 +151,11 @@ export default function Header() {
               {item.title}
             </NavLink>
           ))}
-          <LoginButton>Sing In</LoginButton>
+         {pathName === '/admin'?<LoginButton>
+              <Link href="/" onClick={handleLogout}>Logout</Link>
+            </LoginButton>:<LoginButton>
+            <Link href="/admin/login">Login</Link>
+          </LoginButton>}
         </NavLinks>
 
         {/* Mobile Menu Button */}
