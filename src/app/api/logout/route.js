@@ -5,13 +5,9 @@ import { cookies } from 'next/headers';
 
 export async function GET() {
   const response = NextResponse.json({ message: 'Logout successful' });
-
-  // 🍪 Clear Cookie
-  response.cookies.set('token', '', {
-    httpOnly: true,
-    expires: new Date(0),
-    path: '/',
-  });
-
+  response.headers.set(
+    "Set-Cookie",
+    `token=""; Path=/; HttpOnly; Secure; SameSite=Strict`
+)
   return response;
 }
