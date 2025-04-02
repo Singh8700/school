@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-// 🛑 REMOVE `export const dynamic = "force-dynamic";`
+export const dynamic = "force-static"
 
 export async function GET() {
   const response = NextResponse.json({ message: 'Logout successful' });
