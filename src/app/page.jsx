@@ -250,7 +250,7 @@ export default function Home() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              Welcome to KD Public School
+              Welcome to Design Of Fashion Art School
             </Title>
             <Subtitle
               initial={{ y: 20, opacity: 0 }}

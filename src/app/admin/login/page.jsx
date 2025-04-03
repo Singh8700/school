@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import styled from 'styled-components';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import styled from "styled-components";
 
 const Container = styled.div`
   display: flex;
@@ -102,21 +102,35 @@ const Button = styled.button`
   }
 `;
 
-const LinkText = styled.p`
-  margin-top: 10px;
+const ErrorMessage = styled.p`
+  color: #ccc;
+  text-shadow: 1px 1px 1px #000;
   font-size: 14px;
-  color: #e0e0e0;
-  cursor: pointer;
-  &:hover {
-    text-decoration: underline;
-  }
+  margin-top: 8px;
+  font-weight: bold;
 `;
 
 export default function LoginPage() {
-  const [formData, setFormData] = useState({ email: '', password: '', captcha: '' });
+  const [formData, setFormData] = useState({ email: "", password: "", captcha: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [generatedCaptcha, setGeneratedCaptcha] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
-  const generatedCaptcha = "7X3B2";
+
+  // CAPTCHA Generator Function
+  const generateCaptcha = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let captcha = "";
+    for (let i = 0; i < 5; i++) {
+      captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return captcha;
+  };
+
+  // Generate CAPTCHA on Load
+  useEffect(() => {
+    setGeneratedCaptcha(generateCaptcha());
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -128,32 +142,35 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.captcha !== generatedCaptcha) {
-      setError('Incorrect CAPTCHA. Please try again.');
-      return;
-  }
+    setErrorMessage(""); // Reset error message
 
-  try {
-      const response = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
+    if (formData.captcha !== generatedCaptcha) {
+      setErrorMessage("❌ CAPTCHA is wrong");
+      setGeneratedCaptcha(generateCaptcha()); // CAPTCHA Change on Incorrect Attempt
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
 
-      console.log("reposne data",response)
       const data = await response.json();
 
       if (response.ok) {
-          console.log('Login successful:', data);
-          localStorage.setItem('authToken', data.token); // Store JWT Token
-          router.push('/admin'); // Redirect after successful login
+        console.log("✅ Login successful:", data);
+        localStorage.setItem("authToken", data.token);
+        router.push("/admin");
       } else {
-          setError(data.message || 'Invalid credentials');
+        setErrorMessage("❌ User & Password not exist");
       }
-  } catch (error) {
-      console.error('Login error:', error);
-      setError('An error occurred. Please try again.');
-  }
+    } catch (error) {
+      setErrorMessage("❌ An error occurred. Please try again.");
+    }
+
+    setGeneratedCaptcha(generateCaptcha()); // CAPTCHA Change on Every Login Click
   };
 
   return (
@@ -164,7 +181,14 @@ export default function LoginPage() {
         <Form onSubmit={handleSubmit}>
           <Input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
           <PasswordContainer>
-            <Input type={showPassword ? "text" : "password"} name="password" placeholder="Password" value={formData.password} onChange={handleChange} required />
+            <Input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
             <ToggleButton onClick={togglePasswordVisibility}>{showPassword ? "Hide" : "Show"}</ToggleButton>
           </PasswordContainer>
           <CaptchaContainer>
@@ -172,8 +196,8 @@ export default function LoginPage() {
             <Input type="text" name="captcha" placeholder="Enter CAPTCHA" value={formData.captcha} onChange={handleChange} required />
           </CaptchaContainer>
           <Button type="submit">Login</Button>
+          {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
         </Form>
-        <LinkText onClick={() => router.push('/admin/signup')}>Don't have an account? Sign up</LinkText>
       </Card>
     </Container>
   );

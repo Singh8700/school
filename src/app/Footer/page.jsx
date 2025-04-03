@@ -11,8 +11,9 @@ import Link from "next/link";
 const FooterContainer = styled(motion.footer)`
   width: 100%;
   color: white;
-  padding: 40px 5px 0px 20px;
+  padding: 40px 5px 0px 8px;
   text-align: left;
+  // background:red;
   position: relative;
   bottom: 0;
   left: 0;
@@ -30,20 +31,43 @@ const SectionsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 50px;
+  gap: 40px;
   width: 100%;
   max-width: 1200px;
+  margin:auto;
   margin-bottom: 3.5rem;
+  // background:blue;
+  @media(max-width:660px){
+  flex-direction: column;
+  }
 `;
 
 const Section = styled.div`
   flex: 1;
-  min-width: 200px;
-  max-width: 250px;
+  width: 200px;
+  width: 250px;
+  // background:white;
+  @media(max-width:768px){
+  width:100%;
+  // background:white;
+  padding:0 30px;
+  }
 `;
-
+const TaglineSection = styled.div`
+ display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items:center;
+  flex-direction:column;
+  width: 100%;
+  max-width: 1200px;
+  margin-top:-5rem;
+  margin-bottom: 3.5rem;
+  // background:blue;
+`
 const SectionTitle = styled.h3`
   margin-bottom: 15px;
+  font-size:1.3rem;
   color: rgb(${()=>  Math.random() * 255},${()=>  Math.random() * 255},${()=>  Math.random() * 255});
 `;
 
@@ -137,7 +161,7 @@ const FooterPage = () => {
     >
       <SectionsContainer>
         <Section>
-          <SectionTitle>About KD Public School</SectionTitle>
+          <SectionTitle>About Design Of Fashion Art School</SectionTitle>
           <SectionItem>Providing quality education since 2000, nurturing students for a better future.</SectionItem>
         </Section>
 
@@ -160,11 +184,12 @@ const FooterPage = () => {
         <Section>
           <SectionTitle>Contact Info</SectionTitle>
           <SectionItem><FaPhone /> +91 98765 43210</SectionItem>
-          <SectionItem><FaEnvelope /> contact@kdpublicschool.com</SectionItem>
+          <SectionItem><FaEnvelope /> contact@dofas.com</SectionItem>
           <SectionItem><FaMapMarkerAlt /> 123, School Road, Delhi, India</SectionItem>
         </Section>
         <br></br>
-        <Section>
+      </SectionsContainer>
+      <TaglineSection>
         <Tagline>"Empowering young minds for a brighter future."</Tagline>
       <SocialIcons
         initial={{ opacity: 0, y: 10 }}
@@ -176,8 +201,7 @@ const FooterPage = () => {
         <Link href="#" aria-label="Instagram"><FaInstagram /></Link>
         <Link href="#" aria-label="LinkedIn"><FaLinkedin /></Link>
       </SocialIcons>
-        </Section>
-      </SectionsContainer>
+        </TaglineSection>
       <FooterBottom>
         <FooterText>
           Made with

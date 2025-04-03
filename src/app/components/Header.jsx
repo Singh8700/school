@@ -1,5 +1,5 @@
 "use client"
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import styled from 'styled-components'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaBars, FaTimes } from 'react-icons/fa'
@@ -51,6 +51,7 @@ const NavLinks = styled(motion.div)`
   gap: 2rem;
   justify-content: center;
   align-items: center;
+  
   @media (max-width: 768px) {
     display: none;
     
@@ -82,6 +83,7 @@ const NavLink = styled(motion.a)`
     color: #2563eb;
   }
 `
+
 const LoginButton = styled.button`
   background: #2563eb;
   color: white;
@@ -89,38 +91,60 @@ const LoginButton = styled.button`
   border-radius: 0.5rem;
   font-weight: 500;
   cursor: pointer;
-  line-height:1em;
+  line-height: 1em;
+  
   &:hover {
     background: #1d4ed8;
   }
-    a{
+  
+  a {
     text-decoration: none;
-    color:#fff;
-    }
+    color: #fff;
+  }
 `
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [logoutData, setLogoutData] = useState("")
   const pathName = usePathname()
+
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    setLogoutData(localStorage.getItem("authToken"))
+
+    // Close menu if clicked outside
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [pathName])
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/logout')
+      const data = await response.json()
+
+      if (response.ok) {
+        localStorage.clear()
+        window.location.href = "/"
+      } else {
+        console.error("Logout failed:", data.message)
+      }
+    } catch (error) {
+      console.error("Error logging out:", error)
+    }
+  }
 
   const menuItems = [
     { title: 'Home', href: '/' },
     { title: 'About', href: '/about' },
-    { title: 'Academics', href: '/academics' },
-    // { title: 'Facilities', href: '/facilities' },
-    // { title: 'Contact', href: '/contact' }
+    { title: 'Academics', href: '/academics' }
   ]
-  // console.log("pathanme",pathName)
-  // logout function
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/logout'); // Logout API Call
-      alert('Logged out successfully!');
-      router.push('/login'); // Logout के बाद login page पर redirect
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
 
   return (
     <HeaderContainer>
@@ -131,7 +155,7 @@ export default function Header() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            KD Public School
+            Design Of Fashion Art School
           </motion.span>
         </Logo>
 
@@ -151,11 +175,15 @@ export default function Header() {
               {item.title}
             </NavLink>
           ))}
-         {pathName === '/admin'?<LoginButton>
+          {logoutData ? (
+            <LoginButton>
               <Link href="/" onClick={handleLogout}>Logout</Link>
-            </LoginButton>:<LoginButton>
-            <Link href="/admin/login">Login</Link>
-          </LoginButton>}
+            </LoginButton>
+          ) : (
+            <LoginButton>
+              <Link href="/admin/login">Login</Link>
+            </LoginButton>
+          )}
         </NavLinks>
 
         {/* Mobile Menu Button */}
@@ -167,6 +195,7 @@ export default function Header() {
         <AnimatePresence>
           {isMenuOpen && (
             <NavLinks
+              ref={menuRef} // Ref to detect outside clicks
               as={motion.div}
               className="mobile"
               initial={{ opacity: 0, y: -20 }}
@@ -178,7 +207,7 @@ export default function Header() {
                 <NavLink
                   key={item.title}
                   href={item.href}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => setIsMenuOpen(false)} // ✅ Close menu on link click
                   as={motion.a}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -187,11 +216,19 @@ export default function Header() {
                   {item.title}
                 </NavLink>
               ))}
-               {pathName === '/admin'?<LoginButton>
-              <Link href="/" onClick={handleLogout}>Logout</Link>
-            </LoginButton>:<LoginButton>
-            <Link href="/admin/login">Login</Link>
-          </LoginButton>}
+              {logoutData ? (
+                <LoginButton>
+                  <Link href="/" onClick={() => { setIsMenuOpen(false); handleLogout(); }}>
+                    Logout
+                  </Link>
+                </LoginButton>
+              ) : (
+                <LoginButton>
+                  <Link href="/admin/login" onClick={() => setIsMenuOpen(false)}>
+                    Login
+                  </Link>
+                </LoginButton>
+              )}
             </NavLinks>
           )}
         </AnimatePresence>
