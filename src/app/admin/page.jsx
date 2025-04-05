@@ -5,23 +5,12 @@ import jwt from 'jsonwebtoken';
 
 const SECRET_KEY = process.env.JWTTOKEN; // Ensure this is set in your .env file
 
-async function getProducts() {
-  try {
-    const res = await fetch('/api/login', {
-      cache: 'no-store',
-    });
-    if (!res.ok) throw new Error('Failed to fetch products');
-    return res.json();
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    return [];
-  }
-}
+
 
 export default async function AdminPage() {
   try {
     // 🍪 Get token from cookies
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
 
     // ❌ If no token, redirect to login
@@ -39,9 +28,7 @@ export default async function AdminPage() {
       return redirect('/admin/login');
     }
 
-    // ✅ Fetch products after authentication
-    const products = await getProducts();
-    return <AdminClient initialProducts={products} />;
+    return <AdminClient/>;
   } catch (error) {
     // console.error('Error in AdminPage:', error);
     redirect('/admin/login');

@@ -22,6 +22,7 @@ const FooterContainer = styled(motion.footer)`
   font-family: 'Poppins', sans-serif;
   box-shadow: 0px -5px 10px rgba(0, 0, 0, 0.3);
   display: flex;
+  overflow-x:hidden;
   flex-direction: column;
   align-items: center;
   gap: 30px;
@@ -31,7 +32,7 @@ const SectionsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 40px;
+  gap: 20px;
   width: 100%;
   max-width: 1200px;
   margin:auto;
@@ -39,18 +40,20 @@ const SectionsContainer = styled.div`
   // background:blue;
   @media(max-width:660px){
   flex-direction: column;
+  gap:10px;
   }
 `;
 
 const Section = styled.div`
-  flex: 1;
-  width: 200px;
-  width: 250px;
+  // flex: 2;
+  width:300px;
+  // max-width: 25%;
   // background:white;
-  @media(max-width:768px){
-  width:100%;
+  padding:0 10px;
+  @media(max-width:786px){
+  max-width:100%;
   // background:white;
-  padding:0 30px;
+   padding:10px 20px;
   }
 `;
 const TaglineSection = styled.div`
@@ -61,7 +64,7 @@ const TaglineSection = styled.div`
   flex-direction:column;
   width: 100%;
   max-width: 1200px;
-  margin-top:-5rem;
+  margin-top:-2rem;
   margin-bottom: 3.5rem;
   // background:blue;
 `

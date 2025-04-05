@@ -1,10 +1,9 @@
-"use client"
-import { useState, useEffect, useRef } from 'react'
-import styled from 'styled-components'
-import { motion, AnimatePresence } from 'framer-motion'
-import { FaBars, FaTimes } from 'react-icons/fa'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+"use client";
+import { useState, useEffect, useRef } from 'react';
+import styled from 'styled-components';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaBars, FaTimes } from 'react-icons/fa';
+import Link from 'next/link';
 
 const HeaderContainer = styled.header`
   position: fixed;
@@ -15,7 +14,7 @@ const HeaderContainer = styled.header`
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(8px);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-`
+`;
 
 const Nav = styled.nav`
   display: flex;
@@ -24,14 +23,19 @@ const Nav = styled.nav`
   padding: 1rem 2rem;
   max-width: 1200px;
   margin: 0 auto;
-`
+`;
 
 const Logo = styled.div`
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: bold;
   color: #2563eb;
+  font-family: georgia;
   cursor: pointer;
-`
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    font-family: georgia;
+  }
+`;
 
 const MenuButton = styled.button`
   display: none;
@@ -44,7 +48,7 @@ const MenuButton = styled.button`
   @media (max-width: 768px) {
     display: block;
   }
-`
+`;
 
 const NavLinks = styled(motion.div)`
   display: flex;
@@ -70,7 +74,7 @@ const NavLinks = styled(motion.div)`
       gap: 1rem;
     }
   }
-`
+`;
 
 const NavLink = styled(motion.a)`
   color: #1f2937;
@@ -82,7 +86,7 @@ const NavLink = styled(motion.a)`
   &:hover {
     color: #2563eb;
   }
-`
+`;
 
 const LoginButton = styled.button`
   background: #2563eb;
@@ -96,55 +100,50 @@ const LoginButton = styled.button`
   &:hover {
     background: #1d4ed8;
   }
-  
+
   a {
     text-decoration: none;
     color: #fff;
   }
-`
+`;
 
-export default function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [logoutData, setLogoutData] = useState("")
-  const pathName = usePathname()
-
-  const menuRef = useRef(null)
+export default function Header(props) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const isLoggedIn = !!props?.button; // check truthy token
 
   useEffect(() => {
-    setLogoutData(localStorage.getItem("authToken"))
-
-    // Close menu if clicked outside
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsMenuOpen(false)
+        setIsMenuOpen(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [pathName])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/api/logout')
-      const data = await response.json()
+      const response = await fetch('/api/logout');
+      const data = await response.json();
 
       if (response.ok) {
-        localStorage.clear()
-        window.location.href = "/"
+        localStorage.clear();
+        window.location.href = "/";
       } else {
-        console.error("Logout failed:", data.message)
+        console.error("Logout failed:", data.message);
       }
     } catch (error) {
-      console.error("Error logging out:", error)
+      console.error("Error logging out:", error);
     }
-  }
+  };
 
   const menuItems = [
     { title: 'Home', href: '/' },
     { title: 'About', href: '/about' },
     { title: 'Academics', href: '/academics' }
-  ]
+  ];
 
   return (
     <HeaderContainer>
@@ -159,7 +158,6 @@ export default function Header() {
           </motion.span>
         </Logo>
 
-        {/* Desktop Navigation */}
         <NavLinks>
           {menuItems.map((item, index) => (
             <NavLink
@@ -175,9 +173,10 @@ export default function Header() {
               {item.title}
             </NavLink>
           ))}
-          {logoutData ? (
-            <LoginButton>
-              <Link href="/" onClick={handleLogout}>Logout</Link>
+
+          {isLoggedIn ? (
+            <LoginButton onClick={handleLogout}>
+              Logout
             </LoginButton>
           ) : (
             <LoginButton>
@@ -186,16 +185,14 @@ export default function Header() {
           )}
         </NavLinks>
 
-        {/* Mobile Menu Button */}
         <MenuButton onClick={() => setIsMenuOpen(!isMenuOpen)}>
           {isMenuOpen ? <FaTimes /> : <FaBars />}
         </MenuButton>
 
-        {/* Mobile Navigation */}
         <AnimatePresence>
           {isMenuOpen && (
             <NavLinks
-              ref={menuRef} // Ref to detect outside clicks
+              ref={menuRef}
               as={motion.div}
               className="mobile"
               initial={{ opacity: 0, y: -20 }}
@@ -207,7 +204,7 @@ export default function Header() {
                 <NavLink
                   key={item.title}
                   href={item.href}
-                  onClick={() => setIsMenuOpen(false)} // ✅ Close menu on link click
+                  onClick={() => setIsMenuOpen(false)}
                   as={motion.a}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -216,11 +213,10 @@ export default function Header() {
                   {item.title}
                 </NavLink>
               ))}
-              {logoutData ? (
-                <LoginButton>
-                  <Link href="/" onClick={() => { setIsMenuOpen(false); handleLogout(); }}>
-                    Logout
-                  </Link>
+
+              {isLoggedIn ? (
+                <LoginButton onClick={() => { setIsMenuOpen(false); handleLogout(); }}>
+                  Logout
                 </LoginButton>
               ) : (
                 <LoginButton>
@@ -234,5 +230,5 @@ export default function Header() {
         </AnimatePresence>
       </Nav>
     </HeaderContainer>
-  )
+  );
 }

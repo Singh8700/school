@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FaGraduationCap, FaBook, FaChalkboardTeacher, FaSchool, FaPhone } from 'react-icons/fa'
 import TeachersPage from './Tearchers/page'
 import FacilitiesPage from './facilities/page'
+import ResultRibbon from './updates/page'
 
 const MainContainer = styled(motion.div)`
   min-height: 100vh;
@@ -219,6 +220,7 @@ export default function Home() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
+     <ResultRibbon/>
       {/* Hero Section */}
       <HeroContainer id="home-section">
         <AnimatePresence mode='wait'>
@@ -244,6 +246,7 @@ export default function Home() {
         </AnimatePresence>
         
         <ContentOverlay>
+       
           <HeroContent >
             <Title
               initial={{ y: 20, opacity: 0 }}

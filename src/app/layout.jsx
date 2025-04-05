@@ -1,7 +1,7 @@
 
 import './globals.css'
 import StyledComponentsRegistry from './registry'
-import Header from './components/Header'
+import HeaderPage from './components/HeaderPage'
 import FooterPage from './Footer/page'
 import Navbar from "./components/navBar/page"
 import Loading from './loading/page'
@@ -18,7 +18,7 @@ export default function RootLayout({ children }) {
       <body>
       <Loading/>
         <StyledComponentsRegistry>
-          <Header />
+          <HeaderPage />
           <main className="min-h-screen bg-white">
             {children}
           </main>

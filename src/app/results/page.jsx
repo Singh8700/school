@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -15,7 +14,7 @@ const Container = styled.div`
 
 const Card = styled.div`
   width: 100%;
-  max-width: 420px;
+  max-width: 450px;
   padding: 32px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
@@ -26,7 +25,7 @@ const Card = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: 28px;
+  font-size: 26px;
   font-weight: bold;
   margin-bottom: 8px;
 `;
@@ -54,24 +53,25 @@ const Input = styled.input`
   font-size: 16px;
   transition: 0.3s;
   &:focus {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.5);
     border: 2px solid #fff;
   }
 `;
 
-const PasswordContainer = styled.div`
-  display: flex;
-  align-items: center;
-  position: relative;
-`;
-
-const ToggleButton = styled.span`
-  position: absolute;
-  right: 15px;
-  cursor: pointer;
-  color: white;
-  font-size: 14px;
-  user-select: none;
+const Select = styled.select`
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  outline: none;
+  font-size: 16px;
+  transition: 0.3s;
+  &:focus {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #fff;
+  }
 `;
 
 const CaptchaContainer = styled.div`
@@ -110,12 +110,10 @@ const ErrorMessage = styled.p`
   font-weight: bold;
 `;
 
-export default function LoginPage() {
-  const [formData, setFormData] = useState({ email: "", password: "", captcha: "" });
-  const [showPassword, setShowPassword] = useState(false);
+export default function ResultDownloadPage() {
+  const [formData, setFormData] = useState({ rollNumber: "", class: "", captcha: "" });
   const [generatedCaptcha, setGeneratedCaptcha] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const router = useRouter();
 
   // CAPTCHA Generator Function
   const generateCaptcha = () => {
@@ -136,11 +134,7 @@ export default function LoginPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setErrorMessage(""); // Reset error message
 
@@ -150,52 +144,46 @@ export default function LoginPage() {
       return;
     }
 
-    try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+    console.log("✅ Form submitted successfully!");
+    alert("Result downloading...");
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // console.log("✅ Login successful:", data);
-        localStorage.setItem("authToken", data.token);
-        router.push("/admin");
-      } else {
-        setErrorMessage("❌ User & Password not exist");
-      }
-    } catch (error) {
-      setErrorMessage("❌ An error occurred. Please try again.");
-    }
-
-    setGeneratedCaptcha(generateCaptcha()); // CAPTCHA Change on Every Login Click
+    setGeneratedCaptcha(generateCaptcha()); // CAPTCHA Change on Every Submit
   };
 
   return (
     <Container>
       <Card>
-        <Title>Login</Title>
-        <Tagline>Secure access to your admin panel</Tagline>
+        <Title>Download Your Result</Title>
+        <Tagline>Enter your details to access your academic performance</Tagline>
         <Form onSubmit={handleSubmit}>
-          <Input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
-          <PasswordContainer>
-            <Input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-            <ToggleButton onClick={togglePasswordVisibility}>{showPassword ? "Hide" : "Show"}</ToggleButton>
-          </PasswordContainer>
+          <Input type="text" name="rollNumber" placeholder="Roll Number" value={formData.rollNumber} onChange={handleChange} required />
+          
+          {/* UPDATED CLASS LIST */}
+          <Select name="class" value={formData.class} onChange={handleChange} required>
+            <option value="">Select Class</option>
+            <option value="Nursery">Nursery</option>
+            <option value="LKG">LKG</option>
+            <option value="UKG">UKG</option>
+            <option value="1st">1st</option>
+            <option value="2nd">2nd</option>
+            <option value="3rd">3rd</option>
+            <option value="4th">4th</option>
+            <option value="5th">5th</option>
+            <option value="6th">6th</option>
+            <option value="7th">7th</option>
+            <option value="8th">8th</option>
+            <option value="9th">9th</option>
+            <option value="10th">10th</option>
+            <option value="11th">11th</option>
+            <option value="12th">12th</option>
+          </Select>
+
           <CaptchaContainer>
             <CaptchaBox>{generatedCaptcha}</CaptchaBox>
             <Input type="text" name="captcha" placeholder="Enter CAPTCHA" value={formData.captcha} onChange={handleChange} required />
           </CaptchaContainer>
-          <Button type="submit">Login</Button>
+          
+          <Button type="submit">Download Result</Button>
           {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
         </Form>
       </Card>
