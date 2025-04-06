@@ -107,6 +107,29 @@ const LoginButton = styled.button`
   }
 `;
 
+const AdminButton = styled.button`
+  // background: #2563eb;
+  color: #000;
+  margin-left:2rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  line-height: 1em;
+  
+  &:hover {
+    background: #1d4ed8;
+    a{
+    color:#fff;
+    }
+  }
+
+  a {
+    text-decoration: none;
+    color: #000;
+  }
+`;
+
 export default function Header(props) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -175,9 +198,15 @@ export default function Header(props) {
           ))}
 
           {isLoggedIn ? (
+            <>            
             <LoginButton onClick={handleLogout}>
               Logout
             </LoginButton>
+             <LoginButton>
+             <Link href="/admin">Admin</Link>
+           </LoginButton>
+           </>
+
           ) : (
             <LoginButton>
               <Link href="/admin/login">Login</Link>
@@ -215,9 +244,16 @@ export default function Header(props) {
               ))}
 
               {isLoggedIn ? (
+                <div className='flex justify-center'>
                 <LoginButton onClick={() => { setIsMenuOpen(false); handleLogout(); }}>
                   Logout
                 </LoginButton>
+                <AdminButton>
+                  <Link href="/admin" onClick={() => setIsMenuOpen(false)}>
+                    Admin
+                  </Link>
+                </AdminButton>
+                </div>
               ) : (
                 <LoginButton>
                   <Link href="/admin/login" onClick={() => setIsMenuOpen(false)}>

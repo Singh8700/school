@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import styled from "styled-components";
+import { motion } from "framer-motion";
 import StudentRegister from "../register/page";
 import AddEducation from "../education/page";
 import ViewMarksPopup from "../viewMarks/page";
+import EditStudentPage from "../edit/page"; // ✅ Import
 
-// 🔹 Styled Components (No changes made)
+// Styled Components
 const Container = styled.div`
-max-width:100vw;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -21,7 +22,7 @@ max-width:100vw;
 `;
 
 const Card = styled.div`
-  width: 90%;
+  width: 80%;
   max-width: 800px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
@@ -52,8 +53,64 @@ const Button = styled.button`
 
 const List = styled.ul`
   list-style: none;
-  padding: 0;
+  padding: 1rem 0;
   width: 100%;
+  overflow-x: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+`;
+
+const StudentList = styled(motion.ul)`
+  list-style: none;
+  padding: 1rem 0;
+  width: 100%;
+
+  li {
+    text-transform: capitalize;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    button {
+      margin: 0px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s ease-in-out;
+
+      &:hover {
+        border: 1px solid #ff4081;
+        background: transparent;
+      }
+
+      @media (max-width: 768px) {
+        padding: 10px;
+      }
+    }
+  }
+
+  .btn {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-transform: capitalize;
+
+    .name {
+      font-weight: bold;
+      display: block;
+      margin-left: 10px;
+    }
+  }
 `;
 
 const ListItem = styled.li`
@@ -80,8 +137,10 @@ export default function AdminPage() {
   const [selectedClass, setSelectedClass] = useState(null);
   const [showRegister, setShowRegister] = useState(false);
   const [showEducation, setShowEducation] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(null);
   const [showViewMarks, setShowViewMarks] = useState(false);
+  const [showEditPopup, setShowEditPopup] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [sections, setSections] = useState([]);
 
   useEffect(() => {
     fetchClasses();
@@ -90,35 +149,77 @@ export default function AdminPage() {
   useEffect(() => {
     if (selectedClass) {
       fetchStudents(selectedClass);
+      fetchSections(selectedClass);
     }
   }, [selectedClass]);
 
   useEffect(() => {
-    if (showRegister || showEducation || showViewMarks) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-  }, [showRegister, showEducation, showViewMarks]);
+    document.body.style.overflow =
+      showRegister || showEducation || showViewMarks || showEditPopup
+        ? "hidden"
+        : "auto";
+  }, [showRegister, showEducation, showViewMarks, showEditPopup]);
+
+  useEffect(() => {
+    document.documentElement.style.overflowX = "hidden";
+    document.body.style.overflowX = "hidden";
+
+    return () => {
+      document.documentElement.style.overflowX = "auto";
+      document.body.style.overflowX = "auto";
+    };
+  }, []);
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch("/api/class");
-      const data = await response.json();
+      const res = await fetch("/api/class");
+      const data = await res.json();
       setClasses(data);
-    } catch (error) {
-      console.error("Error fetching classes:", error);
+    } catch (err) {
+      console.error("Error fetching classes:", err);
+    }
+  };
+
+  const fetchSections = async (classId) => {
+    try {
+      const res = await fetch(`/api/section?classId=${classId}`);
+      const data = await res.json();
+      setSections(data);
+    } catch (err) {
+      console.error("Error fetching sections:", err);
     }
   };
 
   const fetchStudents = async (classId) => {
     try {
-      const response = await fetch(`/api/student?classId=${classId}`);
-      const data = await response.json();
+      const res = await fetch(`/api/student?classId=${classId}`);
+      const data = await res.json();
       setStudents(data);
-    } catch (error) {
-      console.error("Error fetching students:", error);
+    } catch (err) {
+      console.error("Error fetching students:", err);
     }
+  };
+
+  const handleDeleteStudent = async (studentId) => {
+    if (!confirm("Are you sure you want to delete this student?")) return;
+    try {
+      const res = await fetch(`/api/student?id=${studentId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        alert("Student deleted!");
+        fetchStudents(selectedClass);
+      } else {
+        alert("Failed to delete student.");
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
+
+  const handleEditStudent = (student) => {
+    setSelectedStudent(student);
+    setShowEditPopup(true);
   };
 
   const handleClassClick = (classId) => {
@@ -127,11 +228,36 @@ export default function AdminPage() {
 
   const handleStudentRegisterClose = () => {
     setShowRegister(false);
-    if (selectedClass) {
-      fetchStudents(selectedClass); // reload students of current class
-    }
-    fetchClasses(); // refresh class list
+    if (selectedClass) fetchStudents(selectedClass);
+    fetchClasses();
   };
+
+  const groupStudentsBySection = () => {
+    const grouped = {};
+
+    sections.forEach((section) => {
+      grouped[section._id] = {
+        name: section.name,
+        students: [],
+      };
+    });
+
+    students.forEach((student) => {
+      const sectionId = student.sectionId;
+      if (grouped[sectionId]) {
+        grouped[sectionId].students.push(student);
+      } else {
+        if (!grouped["unassigned"]) {
+          grouped["unassigned"] = { name: "Unassigned", students: [] };
+        }
+        grouped["unassigned"].students.push(student);
+      }
+    });
+
+    return grouped;
+  };
+
+  const groupedStudents = groupStudentsBySection();
 
   return (
     <Container>
@@ -141,32 +267,56 @@ export default function AdminPage() {
 
         <h3>🎓 Available Classes</h3>
         <List>
-          {classes.map((cls) => (
+          {classes.map((cls, index) => (
             <ListItem key={cls._id} onClick={() => handleClassClick(cls._id)}>
-              {cls.name} - Section {cls.section}
+              <h3>{cls.name}</h3>
+              <h5>Total Student in this class {index}</h5>
             </ListItem>
           ))}
         </List>
 
         {selectedClass && (
           <>
-            <h3>📜 Students in {classes.find((cls) => cls._id === selectedClass)?.name}</h3>
-            {students.length > 0 ? (
-              <List>
-                {students.map((student) => (
-                  <ListItem key={student._id}>
-                    {student.name} (Roll: {student.rollNumber})
-                    <Button onClick={() => {
-                      setSelectedStudent(student);
-                      setShowEducation(true);
-                    }}>📚 Add Marks</Button>
-                    <Button onClick={() => {
-                      setSelectedStudent(student);
-                      setShowViewMarks(true);
-                    }}>📖 View Marks</Button>
-                  </ListItem>
-                ))}
-              </List>
+            <h3>
+              📜 Students in{" "}
+              {classes.find((cls) => cls._id === selectedClass)?.name}
+            </h3>
+            {Object.keys(groupedStudents).length > 0 ? (
+              Object.entries(groupedStudents).map(([sectionId, sectionData]) => (
+                <div key={sectionId}>
+                  <h4>📘 Section {sectionData.name}</h4>
+                  {sectionData.students.length > 0 ? (
+                    <StudentList>
+                      {sectionData.students.map((student) => (
+                        <div key={student._id}>
+                          <ListItem>
+                            (Roll: {student.rollNumber})
+                            <div style={{ display: "flex", gap: "8px" }}>
+                              <Button onClick={() => handleEditStudent(student)}>✏️ Edit</Button>
+                              <Button onClick={() => handleDeleteStudent(student._id)}>❌ Delete</Button>
+                            </div>
+                          </ListItem>
+                          <div className="section">
+                            <span className="name">{student.name}</span>
+                            <div className="btn">
+                              <Button onClick={() => {
+                                setSelectedStudent(student);
+                                setShowEducation(true);
+                              }}>📚 Add Marks</Button>
+                              <Button onClick={() => {
+                                setSelectedStudent(student);
+                                setShowViewMarks(true);
+                              }}>📖 View Marks</Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </StudentList>
+                  ) : (
+                    <p>No students in this section.</p>
+                  )}
+                </div>
+              ))
             ) : (
               <p>No students admitted in this class.</p>
             )}
@@ -174,7 +324,6 @@ export default function AdminPage() {
         )}
       </Card>
 
-      {/* Popups */}
       {showRegister && (
         <StudentRegister closePopup={handleStudentRegisterClose} />
       )}
@@ -190,6 +339,16 @@ export default function AdminPage() {
         <ViewMarksPopup
           studentId={selectedStudent._id}
           closePopup={() => setShowViewMarks(false)}
+        />
+      )}
+
+      {showEditPopup && selectedStudent && (
+        <EditStudentPage
+          student={selectedStudent}
+          closePopup={() => {
+            setShowEditPopup(false);
+            fetchStudents(selectedClass); // reload list
+          }}
         />
       )}
     </Container>

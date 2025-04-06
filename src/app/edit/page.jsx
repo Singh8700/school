@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 
 // 🔹 Styled Components
 const Overlay = styled.div`
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -16,7 +16,7 @@ const Overlay = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 1000000;
 `;
 
 const Modal = styled.div`
@@ -83,7 +83,7 @@ const Select = styled.select`
 const Button = styled.button`
   width: 100%;
   padding: 12px;
-  background: #4caf50;
+  background: #007bff;
   border: none;
   border-radius: 8px;
   color: white;
@@ -92,75 +92,90 @@ const Button = styled.button`
   margin-top: 10px;
 
   &:hover {
-    background: #45a049;
+    background: #0056b3;
   }
 `;
 
-export default function RegisterPage({ closePopup }) {
-  const [formData, setFormData] = useState({
-    name: "",
-    motherName: "",
-    dob: "",
-    gender: "Male",
-    address: "",
-    phone: "",
-    email: "",
-    guardianName: "",
-    guardianPhone: "",
-    guardianRelation: "Father",
-    rollNumber: "",
-    class: "Nursery",
-    section: "A", // ✅ Added section field
-  });
+// 🧠 Edit Student Form Component
+export default function EditStudentPage({ student, closePopup }) {
+  const [formData, setFormData] = useState({...student});
+ 
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const response = await fetch("/api/student", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-
-    if (response.ok) {
-      alert("✅ Student Registered Successfully!");
-      closePopup();
-    } else {
-      alert("❌ Error in Registration!");
+  const fetchStudent = async () => {
+    try {
+      const res = await fetch(`/api/student?id=${student._id}`); // ✅ Corrected URL
+      if (!res.ok) throw new Error("Failed to fetch student");
+      const data = await res.json();
+      console.log("student data is",await data)
+      // setFormData({...data});
+    } catch (err) {
+      console.error("Fetch student failed:", err);
     }
   };
+
+  useEffect(() => {
+  
+    if (student) fetchStudent();
+  }, [student]);
+
+  if (!formData) return <div>Loading...</div>;
+
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    console.log(e.target)
+    try {
+      const res = await fetch(`/api/student?id=${student._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (res.ok) {
+        alert("✅ Student details updated successfully!");
+        closePopup();
+      } else {
+        alert("❌ Failed to update student details.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("❌ Error occurred during update.");
+    }
+  };
+
+  if (!formData) return null;
 
   return (
     <Overlay>
       <Modal>
         <CloseButton onClick={closePopup}>✖</CloseButton>
-        <Title>🎓 Student Registration</Title>
-        <form onSubmit={handleSubmit}>
-          <Input type="text" name="name" placeholder="Full Name" onChange={handleChange} required />
-          <Input type="text" name="motherName" placeholder="Mother's Name" onChange={handleChange} required />
-          <Input type="date" name="dob" placeholder="Date of Birth" onChange={handleChange} required />
-          <Select name="gender" onChange={handleChange}>
+        <Title>✏️ Edit Student</Title>
+        <form onSubmit={handleUpdate}>
+          <Input type="text" name="name" value={formData.name} onChange={handleChange} required />
+          <Input type="text" name="motherName" value={formData.motherName} onChange={handleChange} required />
+          <Input type="date" name="dob" value={formData.dob?.split("T")[0]} onChange={handleChange} required />
+          <Select name="gender" value={formData.gender} onChange={handleChange}>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
             <option value="Other">Other</option>
           </Select>
-          <Input type="text" name="address" placeholder="Address" onChange={handleChange} required />
-          <Input type="text" name="phone" placeholder="Phone Number" onChange={handleChange} required />
-          <Input type="email" name="email" placeholder="Email" onChange={handleChange} required />
-          <Input type="text" name="guardianName" placeholder="Guardian Name" onChange={handleChange} required />
-          <Input type="text" name="guardianPhone" placeholder="Guardian Phone" onChange={handleChange} required />
-          <Select name="guardianRelation" onChange={handleChange}>
+          <Input type="text" name="address" value={formData.address} onChange={handleChange} required />
+          <Input type="text" name="phone" value={formData.phone} onChange={handleChange} required />
+          <Input type="email" name="email" value={formData.email} onChange={handleChange} required />
+          <Input type="text" name="guardianName" value={formData.guardianName} onChange={handleChange} required />
+          <Input type="text" name="guardianPhone" value={formData.guardianPhone} onChange={handleChange} required />
+          <Select name="guardianRelation" value={formData.guardianRelation} onChange={handleChange}>
             <option value="Father">Father</option>
             <option value="Mother">Mother</option>
             <option value="Other">Other</option>
           </Select>
-          <Input type="text" name="rollNumber" placeholder="Roll Number" onChange={handleChange} required />
-
-          {/* ✅ Class Dropdown */}
-          <Select name="class" onChange={handleChange}>
+          <Input type="text" name="rollNumber" value={formData.rollNumber} onChange={handleChange} required />
+          <Select name="class" value={formData.class} onChange={handleChange}>
             <option value="Nursery">Nursery</option>
             <option value="LKG">LKG</option>
             <option value="UKG">UKG</option>
@@ -177,16 +192,13 @@ export default function RegisterPage({ closePopup }) {
             <option value="11th">11th</option>
             <option value="12th">12th</option>
           </Select>
-
-          {/* ✅ Section Dropdown */}
-          <Select name="section" onChange={handleChange}>
+          <Select name="section" value={formData.section || "A"} onChange={handleChange}>
             <option value="A">Section A</option>
             <option value="B">Section B</option>
             <option value="C">Section C</option>
             <option value="D">Section D</option>
           </Select>
-
-          <Button type="submit">Register Student</Button>
+          <Button type="submit">Update Student</Button>
         </form>
       </Modal>
     </Overlay>
