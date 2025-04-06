@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/db/config";
-import { Class } from "@/models/class"; // Make sure it's not "@/models/students"
+import { Class } from "@/models/students"; // Make sure it's not "@/models/students"
 
 // 🔹 GET: Fetch All Classes
 export async function GET() {
