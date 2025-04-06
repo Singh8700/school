@@ -1,26 +1,53 @@
-// 📁 pages/api/section.js
+export const dynamic = "force-dynamic";
 
-import connectDB from "@/db/config"; // ✅ dbConnect ka path sahi hona chahiye
-import { Section } from "@/models/students"; // ✅ Section model yahan import hona chahiye
+import { NextResponse } from "next/server";
+import connectDB from "@/db/config";
+import { Class } from "@/models/students";
 
-export default async function handler(req, res) {
-  await connectDB();
+export async function GET() {
+  try {
+    await connectDB();
+    const classes = await Class.find({});
+    return NextResponse.json(classes);
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to fetch classes" }, { status: 500 });
+  }
+}
 
-  if (req.method === "GET") {
-    const { classId } = req.query;
+export async function POST(req) {
+  try {
+    await connectDB();
+    const { name, section } = await req.json();
+    const newClass = new Class({ name, section });
+    await newClass.save();
+    return NextResponse.json({ message: "Class created successfully", newClass });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to create class" }, { status: 500 });
+  }
+}
 
-    if (!classId) {
-      return res.status(400).json({ message: "classId is required" });
-    }
+export async function PUT(req) {
+  try {
+    await connectDB();
+    const { classId, name, section } = await req.json();
+    const updatedClass = await Class.findByIdAndUpdate(
+      classId,
+      { name, section },
+      { new: true }
+    );
+    return NextResponse.json({ message: "Class updated successfully", updatedClass });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to update class" }, { status: 500 });
+  }
+}
 
-    try {
-      const sections = await Section.find({ classId });
-      return res.status(200).json(sections);
-    } catch (err) {
-      console.error("Error fetching sections:", err);
-      return res.status(500).json({ message: "Server error" });
-    }
-  } else {
-    return res.status(405).json({ message: "Method not allowed" });
+export async function DELETE(req) {
+  try {
+    await connectDB();
+    const { classId } = await req.json();
+    await Class.findByIdAndDelete(classId);
+    return NextResponse.json({ message: "Class deleted successfully" });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to delete class" }, { status: 500 });
   }
 }
