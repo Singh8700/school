@@ -4,9 +4,13 @@ import { NextResponse } from "next/server";
 import connectDB from "@/db/config";
 import { Class } from "@/models/students";
 
+
+
+await connectDB();
+
 export async function GET() {
   try {
-    await connectDB();
+   
     const classes = await Class.find({});
     return NextResponse.json(classes);
   } catch (error) {
@@ -16,7 +20,7 @@ export async function GET() {
 
 export async function POST(req) {
   try {
-    await connectDB();
+    
     const { name, section } = await req.json();
     const newClass = new Class({ name, section });
     await newClass.save();
@@ -28,7 +32,7 @@ export async function POST(req) {
 
 export async function PUT(req) {
   try {
-    await connectDB();
+    
     const { classId, name, section } = await req.json();
     const updatedClass = await Class.findByIdAndUpdate(
       classId,
@@ -43,7 +47,7 @@ export async function PUT(req) {
 
 export async function DELETE(req) {
   try {
-    await connectDB();
+    
     const { classId } = await req.json();
     await Class.findByIdAndDelete(classId);
     return NextResponse.json({ message: "Class deleted successfully" });

@@ -3,7 +3,7 @@ import { Student, Class, Education,Section } from "@/models/students";
 import { NextResponse } from "next/server";
 
 // ✅ Connect to MongoDB
-connectDB();
+await connectDB();
 
 // 📌 [POST] Register a New Student
 export async function POST(req) {
@@ -79,7 +79,7 @@ export async function POST(req) {
     }, { status: 201 });
 
   } catch (error) {
-    console.error("❌ Registration error:", error);
+    // console.error("❌ Registration error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -87,7 +87,7 @@ export async function POST(req) {
 
 // 📌 [PUT] Update Student Details
 export async function PUT(req) {
-  await connectDB();
+
 
   try {
     const { searchParams } = new URL(req.url);
@@ -104,7 +104,7 @@ export async function PUT(req) {
     }
 
     // 🔍 Log for debugging
-    console.log("🟢 PUT data:", { id, className, sectionName, rollNumber });
+    // console.log("🟢 PUT data:", { id, className, sectionName, rollNumber });
 
     // 🔹 1. Find old student
     const existingStudent = await Student.findById(id);
@@ -185,7 +185,7 @@ export async function PUT(req) {
     return NextResponse.json(updatedStudent);
 
   } catch (error) {
-    console.error("❌ Update error:", error);
+    // console.error("❌ Update error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
