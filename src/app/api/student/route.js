@@ -85,91 +85,92 @@ export async function POST(req) {
 }
 
 
-// 📌 [PUT] Update Student Details
+// 📌 [PUT] Update an Existing Student
+
 export async function PUT(req) {
-
-
   try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-    const body = await req.json();
+    const url = new URL(req.url, `http://${req.headers.get("host")}`);
+    const id = url.searchParams.get("id");
 
-    const { class: className, section: sectionName, rollNumber } = body;
-
-    // 🛑 Validate
-    if (!id || !className || !sectionName || !rollNumber) {
-      return NextResponse.json({
-        error: "Missing required fields: class, section, or rollNumber.",
-      }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: "Student ID is required." }, { status: 400 });
     }
 
-    // 🔍 Log for debugging
-    // console.log("🟢 PUT data:", { id, className, sectionName, rollNumber });
+    const incomingData = await req.json();
 
-    // 🔹 1. Find old student
-    const existingStudent = await Student.findById(id);
-    if (!existingStudent) {
-      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+    // 🔍 Find student first
+    const student = await Student.findById(id);
+    if (!student) {
+      return NextResponse.json({ error: "Student not found." }, { status: 404 });
     }
 
-    // 🔹 2. Get/Create Class
-    let classDoc = await Class.findOne({ name: className });
+    // 🧠 Merge existing + new data (fallback to old values)
+    const mergedData = {
+      name: incomingData.name || student.name,
+      motherName: incomingData.motherName || student.motherName,
+      dob: incomingData.dob || student.dob,
+      gender: incomingData.gender || student.gender,
+      address: incomingData.address || student.address,
+      phone: incomingData.phone || student.phone,
+      email: incomingData.email || student.email,
+      guardianName: incomingData.guardianName || student.guardianName,
+      guardianPhone: incomingData.guardianPhone || student.guardianPhone,
+      guardianRelation: incomingData.guardianRelation || student.guardianRelation,
+      rollNumber: incomingData.rollNumber || student.rollNumber,
+      class: incomingData.class || student.class,
+      section: incomingData.section || student.section,
+    };
+
+    // 🔎 Check or create class
+    let classDoc = await Class.findOne({ name: mergedData.class });
     if (!classDoc) {
-      classDoc = await new Class({
-        name: className,
-        sections: [],
-        students: []
-      }).save();
+      classDoc = await new Class({ name: mergedData.class, sections: [], students: [] }).save();
     }
 
-    // 🔹 3. Get/Create Section
-    let sectionDoc = await Section.findOne({ name: sectionName, classId: classDoc._id });
+    // 🔎 Check or create section
+    let sectionDoc = await Section.findOne({ name: mergedData.section, classId: classDoc._id });
     if (!sectionDoc) {
       sectionDoc = await new Section({
-        name: sectionName,
+        name: mergedData.section,
         classId: classDoc._id,
-        students: []
+        students: [],
       }).save();
 
-      if (!Array.isArray(classDoc.sections)) {
-        classDoc.sections = [];
-      }
-
-      if (!classDoc.sections.map(id => id.toString()).includes(sectionDoc._id.toString())) {
+      if (!classDoc.sections.includes(sectionDoc._id)) {
         classDoc.sections.push(sectionDoc._id);
         await classDoc.save();
       }
     }
 
-    // 🔹 4. Check for duplicate roll number (excluding current student)
-    const existingRoll = await Student.findOne({
+    // 🚫 Check for duplicate roll number in same class-section (excluding self)
+    const duplicate = await Student.findOne({
       _id: { $ne: id },
+      rollNumber: mergedData.rollNumber,
       classId: classDoc._id,
       sectionId: sectionDoc._id,
-      rollNumber
     });
 
-    if (existingRoll) {
+    if (duplicate) {
       return NextResponse.json({
-        error: `Roll number "${rollNumber}" already exists in Class ${className}, Section ${sectionName}.`
+        error: `Roll number "${mergedData.rollNumber}" already exists in Class ${mergedData.class}, Section ${mergedData.section}.`,
       }, { status: 400 });
     }
 
-    const oldClassId = existingStudent.classId?.toString();
-    const oldSectionId = existingStudent.sectionId?.toString();
+    const oldClassId = student.classId?.toString();
+    const oldSectionId = student.sectionId?.toString();
 
-    // 🔄 5. Update student
+    // ✏️ Update student
     const updatedStudent = await Student.findByIdAndUpdate(
       id,
       {
-        ...body,
+        ...mergedData,
         classId: classDoc._id,
-        sectionId: sectionDoc._id
+        sectionId: sectionDoc._id,
       },
       { new: true }
     );
 
-    // 🔁 6. Remove from old class/section
+    // 🔁 Remove from old class/section if changed
     if (oldClassId && oldClassId !== classDoc._id.toString()) {
       await Class.findByIdAndUpdate(oldClassId, { $pull: { students: id } });
     }
@@ -178,17 +179,28 @@ export async function PUT(req) {
       await Section.findByIdAndUpdate(oldSectionId, { $pull: { students: id } });
     }
 
-    // 🔁 7. Add to new class/section
-    await Class.findByIdAndUpdate(classDoc._id, { $addToSet: { students: id } });
-    await Section.findByIdAndUpdate(sectionDoc._id, { $addToSet: { students: id } });
+    // ➕ Add to new class/section
+    await Class.findByIdAndUpdate(classDoc._id, {
+      $addToSet: { students: id },
+    });
 
-    return NextResponse.json(updatedStudent);
+    await Section.findByIdAndUpdate(sectionDoc._id, {
+      $addToSet: { students: id },
+    });
+
+    return NextResponse.json({
+      message: "✅ Student updated successfully.",
+      student: updatedStudent,
+    });
 
   } catch (error) {
-    // console.error("❌ Update error:", error);
+    console.error("❌ Update error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+
+
 
 
 // 📌 [GET] Fetch Students (All or Single Based on Query)

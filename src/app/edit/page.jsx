@@ -96,30 +96,16 @@ const Button = styled.button`
   }
 `;
 
-// 🧠 Edit Student Form Component
 export default function EditStudentPage({ student, closePopup }) {
-  const [formData, setFormData] = useState({...student});
- 
-
-  const fetchStudent = async () => {
-    try {
-      const res = await fetch(`/api/student?id=${student._id}`); // ✅ Corrected URL
-      if (!res.ok) throw new Error("Failed to fetch student");
-      const data = await res.json();
-      console.log("student data is",await data)
-      // setFormData({...data});
-    } catch (err) {
-      console.error("Fetch student failed:", err);
-    }
-  };
+  const [formData, setFormData] = useState({ ...student });
 
   useEffect(() => {
-  
-    if (student) fetchStudent();
+    if (student) {
+      setFormData({ ...student });
+    }
   }, [student]);
 
   if (!formData) return <div>Loading...</div>;
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -128,27 +114,34 @@ export default function EditStudentPage({ student, closePopup }) {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    console.log(e.target)
+
+    // 🧠 Ensure class, section, and rollNumber have fallback to old data
+    const cleanedData = {
+      ...formData,
+      class: formData.class || student.class,
+      section: formData.section || student.section,
+      rollNumber: formData.rollNumber || student.rollNumber,
+    };
+
     try {
       const res = await fetch(`/api/student?id=${student._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(cleanedData),
       });
 
       if (res.ok) {
         alert("✅ Student details updated successfully!");
         closePopup();
       } else {
-        alert("❌ Failed to update student details.");
+        const errorData = await res.json();
+        alert(`❌ Failed to update student: ${errorData.error || "Unknown error"}`);
       }
     } catch (err) {
       console.error(err);
       alert("❌ Error occurred during update.");
     }
   };
-
-  if (!formData) return null;
 
   return (
     <Overlay>
@@ -175,7 +168,7 @@ export default function EditStudentPage({ student, closePopup }) {
             <option value="Other">Other</option>
           </Select>
           <Input type="text" name="rollNumber" value={formData.rollNumber} onChange={handleChange} required />
-          <Select name="class" value={formData.class} onChange={handleChange}>
+          <Select name="class" value={formData.class || student.class} onChange={handleChange}>
             <option value="Nursery">Nursery</option>
             <option value="LKG">LKG</option>
             <option value="UKG">UKG</option>
@@ -192,7 +185,7 @@ export default function EditStudentPage({ student, closePopup }) {
             <option value="11th">11th</option>
             <option value="12th">12th</option>
           </Select>
-          <Select name="section" value={formData.section || "A"} onChange={handleChange}>
+          <Select name="section" value={formData.section || student.section} onChange={handleChange}>
             <option value="A">Section A</option>
             <option value="B">Section B</option>
             <option value="C">Section C</option>

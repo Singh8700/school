@@ -8,13 +8,17 @@ await connectDB();
 // 🔹 GET: Fetch All Classes
 export async function GET() {
   try {
-    const classes = await Class.find({});
+    const classes = await Class.find({}).populate("sections").populate("students");
+    console.log("class details is:",JSON.stringify(classes,null, 2));
     return NextResponse.json(classes);
   } catch (error) {
     console.error("❌ GET error:", error);
     return NextResponse.json({ error: "Failed to fetch classes" }, { status: 500 });
   }
 }
+  
+
+
 
 // 🔹 POST: Add New Class
 export async function POST(req) {

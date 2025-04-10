@@ -6,9 +6,9 @@ import { motion } from "framer-motion";
 import StudentRegister from "../register/page";
 import AddEducation from "../education/page";
 import ViewMarksPopup from "../viewMarks/page";
-import EditStudentPage from "../edit/page"; // ✅ Import
+import EditStudentPage from "../edit/page";
 
-// Styled Components
+// Styled Components (same)
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -163,7 +163,6 @@ export default function AdminPage() {
   useEffect(() => {
     document.documentElement.style.overflowX = "hidden";
     document.body.style.overflowX = "hidden";
-
     return () => {
       document.documentElement.style.overflowX = "auto";
       document.body.style.overflowX = "auto";
@@ -209,6 +208,8 @@ export default function AdminPage() {
       if (res.ok) {
         alert("Student deleted!");
         fetchStudents(selectedClass);
+        fetchClasses();
+        fetchSections(selectedClass);
       } else {
         alert("Failed to delete student.");
       }
@@ -228,7 +229,10 @@ export default function AdminPage() {
 
   const handleStudentRegisterClose = () => {
     setShowRegister(false);
-    if (selectedClass) fetchStudents(selectedClass);
+    if (selectedClass) {
+      fetchStudents(selectedClass);
+      fetchSections(selectedClass);
+    }
     fetchClasses();
   };
 
@@ -267,59 +271,77 @@ export default function AdminPage() {
 
         <h3>🎓 Available Classes</h3>
         <List>
-          {classes.map((cls, index) => (
+          {classes.map((cls) => (
             <ListItem key={cls._id} onClick={() => handleClassClick(cls._id)}>
               <h3>{cls.name}</h3>
-              <h5>Total Student in this class {index}</h5>
+              <h5>Total Sections in this class {cls.sections.length}</h5>
+              <h5>Total Student in this class {cls.students.length}</h5>
             </ListItem>
           ))}
         </List>
 
         {selectedClass && (
           <>
-            <h3>
-              📜 Students in{" "}
-              {classes.find((cls) => cls._id === selectedClass)?.name}
-            </h3>
-            {Object.keys(groupedStudents).length > 0 ? (
-              Object.entries(groupedStudents).map(([sectionId, sectionData]) => (
-                <div key={sectionId}>
-                  <h4>📘 Section {sectionData.name}</h4>
-                  {sectionData.students.length > 0 ? (
-                    <StudentList>
-                      {sectionData.students.map((student) => (
-                        <div key={student._id}>
-                          <ListItem>
-                            (Roll: {student.rollNumber})
-                            <div style={{ display: "flex", gap: "8px" }}>
-                              <Button onClick={() => handleEditStudent(student)}>✏️ Edit</Button>
-                              <Button onClick={() => handleDeleteStudent(student._id)}>❌ Delete</Button>
-                            </div>
-                          </ListItem>
-                          <div className="section">
-                            <span className="name">{student.name}</span>
-                            <div className="btn">
-                              <Button onClick={() => {
-                                setSelectedStudent(student);
-                                setShowEducation(true);
-                              }}>📚 Add Marks</Button>
-                              <Button onClick={() => {
-                                setSelectedStudent(student);
-                                setShowViewMarks(true);
-                              }}>📖 View Marks</Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </StudentList>
-                  ) : (
-                    <p>No students in this section.</p>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p>No students admitted in this class.</p>
-            )}
+            {(() => {
+              const selected = classes.find((cls) => cls._id === selectedClass);
+              if (!selected) return <p>🔍 No class selected.</p>;
+
+              const studentMap = {};
+              selected.students.forEach((std) => {
+                studentMap[std._id] = std;
+              });
+
+              const validSections = selected.sections?.filter(
+                (section) =>
+                  Array.isArray(section.students) &&
+                  section.students.some((id) => studentMap[id])
+              );
+
+              if (!validSections || validSections.length === 0) {
+                return <p>🚫 No students admitted in this class.</p>;
+              }
+
+              return (
+                <>
+                  <h3>📜 Students in {selected.name}</h3>
+                  {validSections.map((section) => {
+                    const students = section.students
+                      .map((id) => studentMap[id])
+                      .filter(Boolean);
+                    return (
+                      <div key={section._id}>
+                        <h4>📘 Section {section.name}</h4>
+                        {students.length > 0 ? (
+                          <StudentList>
+                            {students.map((student) => (
+                              <div key={student._id}>
+                                <ListItem>
+                                  <strong>{student.name}</strong> (Roll: {student.rollNumber})
+                                  <div style={{ display: "flex", gap: "8px" }}>
+                                    <Button onClick={() => handleEditStudent(student)}>✏️ Edit</Button>
+                                    <Button onClick={() => handleDeleteStudent(student._id)}>❌ Delete</Button>
+                                    <Button onClick={() => {
+                                      setSelectedStudent(student);
+                                      setShowEducation(true);
+                                    }}>📚 Add Marks</Button>
+                                    <Button onClick={() => {
+                                      setSelectedStudent(student);
+                                      setShowViewMarks(true);
+                                    }}>📖 View Marks</Button>
+                                  </div>
+                                </ListItem>
+                              </div>
+                            ))}
+                          </StudentList>
+                        ) : (
+                          <p>No students in this section.</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </>
+              );
+            })()}
           </>
         )}
       </Card>
@@ -331,14 +353,24 @@ export default function AdminPage() {
       {showEducation && selectedStudent && (
         <AddEducation
           studentId={selectedStudent._id}
-          closePopup={() => setShowEducation(false)}
+          closePopup={() => {
+            setShowEducation(false);
+            fetchStudents(selectedClass);
+            fetchClasses();
+            fetchSections(selectedClass);
+          }}
         />
       )}
 
       {showViewMarks && selectedStudent && (
         <ViewMarksPopup
           studentId={selectedStudent._id}
-          closePopup={() => setShowViewMarks(false)}
+          closePopup={() => {
+            setShowViewMarks(false);
+            fetchStudents(selectedClass);
+            fetchClasses();
+            fetchSections(selectedClass);
+          }}
         />
       )}
 
@@ -347,7 +379,9 @@ export default function AdminPage() {
           student={selectedStudent}
           closePopup={() => {
             setShowEditPopup(false);
-            fetchStudents(selectedClass); // reload list
+            fetchStudents(selectedClass);
+            fetchClasses();
+            fetchSections(selectedClass);
           }}
         />
       )}
