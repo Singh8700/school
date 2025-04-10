@@ -6,6 +6,7 @@ import { Class,Section,Student } from "@/models/students";
 // Connect to DB
 await connectDB();
 
+export const dynamic = "force-static"
 // 🔹 GET: Fetch All Classes
 export async function GET() {
   try {
