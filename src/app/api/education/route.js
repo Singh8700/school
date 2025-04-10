@@ -4,6 +4,7 @@ import { Education } from "@/models/students";
 
 // ✅ Connect DB First
 await connectDB();
+export const dynamic = "force-static"
 
 function calculateGrade(marks) {
   const {
