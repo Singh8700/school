@@ -8,8 +8,9 @@ import AddEducation from "../education/page";
 import ViewMarksPopup from "../viewMarks/page";
 import EditStudentPage from "../edit/page";
 
-// Styled Components (same)
+// Styled Components
 const Container = styled.div`
+width:100vw;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -22,13 +23,40 @@ const Container = styled.div`
 `;
 
 const Card = styled.div`
-  width: 80%;
-  max-width: 800px;
+  width: 90vw;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   padding: 20px;
-  border-radius: 12px;
+  border-radius: 18px;
   box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.2);
+  .sections {
+  width:100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align:center;
+  flex-wrap:wrap;
+  gap: 10px;
+  }
+  .studnetItem{
+  width:100%;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap:wrap;
+  align-items: center;
+  gap: 10px;
+  padding:20px 20px;
+  @media(max-width:420px){
+  // background:red;
+  justify-content:center;
+  align-items:center;
+  }
+  }
 `;
 
 const Button = styled.button`
@@ -54,24 +82,39 @@ const Button = styled.button`
 const List = styled.ul`
   list-style: none;
   padding: 1rem 0;
-  width: 100%;
-  overflow-x: hidden;
+  width: 100%\;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap:wrap;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
   gap: 10px;
 `;
 
 const StudentList = styled(motion.ul)`
   list-style: none;
+  // background: rgba(255, 255, 25, 0.2);
   padding: 1rem 0;
   width: 100%;
+  display: flex;
+  flex-wrap:wrap;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+  gap: 10px;
+  margin:auto 0;
 
   li {
+  margin:auto 0;
+  text-align: center;
+  width:100%;
     text-transform: capitalize;
     display: flex;
     justify-content: space-between;
     align-items: center;
-
+  // background: rgba(255, 255, 255, 1);
+  border-radius: 5px;
+  padding: 10px;
     button {
       margin: 0px;
       background: transparent;
@@ -101,6 +144,10 @@ const StudentList = styled(motion.ul)`
 
   .section {
     display: flex;
+    width:50%;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    padding: 10px;
     justify-content: space-between;
     align-items: center;
     text-transform: capitalize;
@@ -120,6 +167,11 @@ const ListItem = styled.li`
   border-radius: 5px;
   cursor: pointer;
   transition: 0.3s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-transform: capitalize;
+  width:250px;
 
   &:hover {
     background: rgba(255, 255, 255, 0.3);
@@ -218,8 +270,47 @@ export default function AdminPage() {
     }
   };
 
+  const handleDeleteClass = async (classId) => {
+    if (!confirm("Are you sure you want to delete this class?")) return;
+    try {
+      const res = await fetch(`/api/class?id=${classId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        alert("Class deleted!");
+        if (classId === selectedClass) setSelectedClass(null);
+        fetchClasses();
+      } else {
+        alert("Failed to delete class.");
+      }
+    } catch (err) {
+      console.error("Delete class error:", err);
+    }
+  };
+
+  const handleDeleteSection = async (sectionId) => {
+    if (!confirm("Are you sure you want to delete this section?")) return;
+    try {
+      const res = await fetch(`/api/section?id=${sectionId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        alert("Section deleted!");
+        fetchSections(selectedClass);
+        fetchStudents(selectedClass);
+        fetchClasses();
+      } else {
+        alert("Failed to delete section.");
+      }
+    } catch (err) {
+      console.error("Delete section error:", err);
+    }
+  };
+
   const handleEditStudent = (student) => {
-    setSelectedStudent(student);
+    students.forEach((item) => {
+      if (item._id === student._id) setSelectedStudent(item);
+    });
     setShowEditPopup(true);
   };
 
@@ -236,33 +327,6 @@ export default function AdminPage() {
     fetchClasses();
   };
 
-  const groupStudentsBySection = () => {
-    const grouped = {};
-
-    sections.forEach((section) => {
-      grouped[section._id] = {
-        name: section.name,
-        students: [],
-      };
-    });
-
-    students.forEach((student) => {
-      const sectionId = student.sectionId;
-      if (grouped[sectionId]) {
-        grouped[sectionId].students.push(student);
-      } else {
-        if (!grouped["unassigned"]) {
-          grouped["unassigned"] = { name: "Unassigned", students: [] };
-        }
-        grouped["unassigned"].students.push(student);
-      }
-    });
-
-    return grouped;
-  };
-
-  const groupedStudents = groupStudentsBySection();
-
   return (
     <Container>
       <Card>
@@ -273,77 +337,86 @@ export default function AdminPage() {
         <List>
           {classes.map((cls) => (
             <ListItem key={cls._id} onClick={() => handleClassClick(cls._id)}>
-              <h3>{cls.name}</h3>
-              <h5>Total Sections in this class {cls.sections.length}</h5>
-              <h5>Total Student in this class {cls.students.length}</h5>
+              <div>
+                <h3>{cls.name}</h3>
+                <h5>Total Sections: {cls.sections.length}</h5>
+                <h5>Total Students: {cls.students.length}</h5>
+              </div>
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteClass(cls._id);
+                }}
+              >
+                🗑️ Delete
+              </Button>
             </ListItem>
           ))}
         </List>
 
-        {selectedClass && (
-          <>
-            {(() => {
-              const selected = classes.find((cls) => cls._id === selectedClass);
-              if (!selected) return <p>🔍 No class selected.</p>;
+        {selectedClass && (() => {
+          const selected = classes.find((cls) => cls._id === selectedClass);
+          if (!selected) return <p>🔍 No class selected.</p>;
 
-              const studentMap = {};
-              selected.students.forEach((std) => {
-                studentMap[std._id] = std;
-              });
+          const studentMap = {};
+          selected.students.forEach((std) => {
+            studentMap[std._id] = std;
+          });
 
-              const validSections = selected.sections?.filter(
-                (section) =>
-                  Array.isArray(section.students) &&
-                  section.students.some((id) => studentMap[id])
-              );
+          const validSections = selected.sections?.filter(
+            (section) =>
+              Array.isArray(section.students) &&
+              section.students.some((id) => studentMap[id])
+          );
 
-              if (!validSections || validSections.length === 0) {
-                return <p>🚫 No students admitted in this class.</p>;
-              }
+          if (!validSections || validSections.length === 0) {
+            return <p>🚫 No students admitted in this class.</p>;
+          }
 
-              return (
-                <>
-                  <h3>📜 Students in {selected.name}</h3>
-                  {validSections.map((section) => {
-                    const students = section.students
-                      .map((id) => studentMap[id])
-                      .filter(Boolean);
-                    return (
-                      <div key={section._id}>
-                        <h4>📘 Section {section.name}</h4>
-                        {students.length > 0 ? (
-                          <StudentList>
-                            {students.map((student) => (
-                              <div key={student._id}>
-                                <ListItem>
-                                  <strong>{student.name}</strong> (Roll: {student.rollNumber})
-                                  <div style={{ display: "flex", gap: "8px" }}>
-                                    <Button onClick={() => handleEditStudent(student)}>✏️ Edit</Button>
-                                    <Button onClick={() => handleDeleteStudent(student._id)}>❌ Delete</Button>
-                                    <Button onClick={() => {
-                                      setSelectedStudent(student);
-                                      setShowEducation(true);
-                                    }}>📚 Add Marks</Button>
-                                    <Button onClick={() => {
-                                      setSelectedStudent(student);
-                                      setShowViewMarks(true);
-                                    }}>📖 View Marks</Button>
-                                  </div>
-                                </ListItem>
+          return (
+            <>
+              <h3>📜 Students in {selected.name}</h3>
+              {validSections.map((section) => {
+                const students = section.students
+                  .map((id) => studentMap[id])
+                  .filter(Boolean);
+                return (
+                  <div key={section._id} className="sections">
+                    <div className="section">
+                      <h4>📘 Section {section.name}</h4>
+                      <Button onClick={() => handleDeleteSection(section._id)}>🗑️ Delete Section</Button>
+                    </div>
+                    {students.length > 0 ? (
+                      <StudentList>
+                        {students.map((student) => (
+                          <div key={student._id}>
+                            <ListItem className="studnetItem">
+                              <strong>{student.name}</strong> (Roll: {student.rollNumber})
+                              <div style={{ display: "flex", gap: "8px" }}>
+                                <Button onClick={() => handleEditStudent(student)}>✏️ Edit</Button>
+                                <Button onClick={() => handleDeleteStudent(student._id)}>❌ Delete</Button>
+                                <Button onClick={() => {
+                                  setSelectedStudent(student);
+                                  setShowEducation(true);
+                                }}>📚 Add Marks</Button>
+                                <Button onClick={() => {
+                                  setSelectedStudent(student);
+                                  setShowViewMarks(true);
+                                }}>📖 View Marks</Button>
                               </div>
-                            ))}
-                          </StudentList>
-                        ) : (
-                          <p>No students in this section.</p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </>
-              );
-            })()}
-          </>
-        )}
+                            </ListItem>
+                          </div>
+                        ))}
+                      </StudentList>
+                    ) : (
+                      <p>No students in this section.</p>
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          );
+        })()}
       </Card>
 
       {showRegister && (

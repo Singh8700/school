@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import styled from "styled-components";
+import { useRouter } from "next/navigation"; // ✅ For redirection
 
+// 🧊 YOUR ORIGINAL STYLED COMPONENTS — UNCHANGED
 const Container = styled.div`
   display: flex;
   align-items: center;
@@ -111,11 +113,11 @@ const ErrorMessage = styled.p`
 `;
 
 export default function ResultDownloadPage() {
-  const [formData, setFormData] = useState({ rollNumber: "", class: "", captcha: "" });
+  const [formData, setFormData] = useState({ rollNumber: "", class: "", section: "", captcha: "" });
   const [generatedCaptcha, setGeneratedCaptcha] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const router = useRouter();
 
-  // CAPTCHA Generator Function
   const generateCaptcha = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let captcha = "";
@@ -125,7 +127,6 @@ export default function ResultDownloadPage() {
     return captcha;
   };
 
-  // Generate CAPTCHA on Load
   useEffect(() => {
     setGeneratedCaptcha(generateCaptcha());
   }, []);
@@ -134,20 +135,40 @@ export default function ResultDownloadPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage(""); // Reset error message
+    setErrorMessage("");
 
     if (formData.captcha !== generatedCaptcha) {
       setErrorMessage("❌ CAPTCHA is wrong");
-      setGeneratedCaptcha(generateCaptcha()); // CAPTCHA Change on Incorrect Attempt
+      setGeneratedCaptcha(generateCaptcha());
       return;
     }
 
-    console.log("✅ Form submitted successfully!");
-    alert("Result downloading...");
+    try {
+      const res = await fetch("/api/result", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rollNumber: formData.rollNumber,
+          className: formData.class,
+          sectionName: formData.section,
+        }),
+      });
 
-    setGeneratedCaptcha(generateCaptcha()); // CAPTCHA Change on Every Submit
+      const data = await res.json();
+
+      if (!res.ok || !data?.student || !data?.education) {
+        setErrorMessage("❌ Result not declared or student not found");
+        setGeneratedCaptcha(generateCaptcha());
+        return;
+      }
+
+      router.push(`student/result/${data.student._id}`);
+    } catch (error) {
+      console.error("Error fetching result:", error);
+      setErrorMessage("❌ Something went wrong!");
+    }
   };
 
   return (
@@ -156,9 +177,15 @@ export default function ResultDownloadPage() {
         <Title>Download Your Result</Title>
         <Tagline>Enter your details to access your academic performance</Tagline>
         <Form onSubmit={handleSubmit}>
-          <Input type="text" name="rollNumber" placeholder="Roll Number" value={formData.rollNumber} onChange={handleChange} required />
-          
-          {/* UPDATED CLASS LIST */}
+          <Input
+            type="text"
+            name="rollNumber"
+            placeholder="Roll Number"
+            value={formData.rollNumber}
+            onChange={handleChange}
+            required
+          />
+
           <Select name="class" value={formData.class} onChange={handleChange} required>
             <option value="">Select Class</option>
             <option value="Nursery">Nursery</option>
@@ -178,12 +205,27 @@ export default function ResultDownloadPage() {
             <option value="12th">12th</option>
           </Select>
 
+          <Select name="section" value={formData.section} onChange={handleChange} required>
+            <option value="">Select Section</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+          </Select>
+
           <CaptchaContainer>
             <CaptchaBox>{generatedCaptcha}</CaptchaBox>
-            <Input type="text" name="captcha" placeholder="Enter CAPTCHA" value={formData.captcha} onChange={handleChange} required />
+            <Input
+              type="text"
+              name="captcha"
+              placeholder="Enter CAPTCHA"
+              value={formData.captcha}
+              onChange={handleChange}
+              required
+            />
           </CaptchaContainer>
-          
-          <Button type="submit">Download Result</Button>
+
+          <Button type="submit">Show Result</Button>
           {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
         </Form>
       </Card>

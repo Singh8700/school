@@ -5,13 +5,17 @@ import styled from "styled-components";
 
 const Overlay = styled.div`
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  top: 0;
+  left: 0;
+  width: 100%;
+  overflow-x: hidden;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 1000;
+  justify-content: center;
+  z-index: 1000000;
 `;
 
 const Modal = styled.div`
@@ -79,7 +83,16 @@ export default function MarksPopup({ studentId, closePopup }) {
   const [percentage, setPercentage] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Ensure studentId is available
+  // Lock scrolling on both body and html when modal is open
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "auto";
+      document.documentElement.style.overflow = "auto";
+    };
+  }, []);
+
   useEffect(() => {
     if (!studentId) {
       console.warn("❌ studentId not received");
@@ -107,7 +120,6 @@ export default function MarksPopup({ studentId, closePopup }) {
     }
   };
 
-  // Grade Calculation
   useEffect(() => {
     const total =
       parseFloat(form.maths || 0) +
@@ -120,14 +132,14 @@ export default function MarksPopup({ studentId, closePopup }) {
     const percent = (total / 6).toFixed(2);
     setPercentage(percent);
 
-    let grade = "F";
-    if (percent >= 90) grade = "A+";
-    else if (percent >= 80) grade = "A";
-    else if (percent >= 70) grade = "B";
-    else if (percent >= 60) grade = "C";
-    else if (percent >= 50) grade = "D";
+    let computedGrade = "F";
+    if (percent >= 90) computedGrade = "A+";
+    else if (percent >= 80) computedGrade = "A";
+    else if (percent >= 70) computedGrade = "B";
+    else if (percent >= 60) computedGrade = "C";
+    else if (percent >= 50) computedGrade = "D";
 
-    setGrade(grade);
+    setGrade(computedGrade);
   }, [form]);
 
   const handleChange = (e) => {
@@ -147,7 +159,7 @@ export default function MarksPopup({ studentId, closePopup }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          studentId, // ✅ Send studentId
+          studentId,
           ...form,
           grade,
         }),
@@ -170,7 +182,9 @@ export default function MarksPopup({ studentId, closePopup }) {
 
         {["maths", "hindi", "science", "english", "socialScience", "physicalEducation"].map((subject) => (
           <div key={subject}>
-            <Label>{subject.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}</Label>
+            <Label>
+              {subject.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
+            </Label>
             <Input
               type="number"
               name={subject}
@@ -182,8 +196,12 @@ export default function MarksPopup({ studentId, closePopup }) {
           </div>
         ))}
 
-        <p><strong>🎯 Percentage:</strong> {percentage}%</p>
-        <p><strong>🏅 Grade:</strong> {grade}</p>
+        <p>
+          <strong>🎯 Percentage:</strong> {percentage}%
+        </p>
+        <p>
+          <strong>🏅 Grade:</strong> {grade}
+        </p>
 
         <div style={{ marginTop: "20px" }}>
           <Button onClick={handleSubmit} disabled={loading}>

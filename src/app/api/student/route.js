@@ -105,7 +105,7 @@ export async function PUT(req) {
     }
 
     // 🧠 Merge existing + new data (fallback to old values)
-    const mergedData = {
+     const mergedData = await {
       name: incomingData.name || student.name,
       motherName: incomingData.motherName || student.motherName,
       dob: incomingData.dob || student.dob,
@@ -120,7 +120,8 @@ export async function PUT(req) {
       class: incomingData.class || student.class,
       section: incomingData.section || student.section,
     };
-
+    console.log("data",mergedData)
+    console.log("student",student)
     // 🔎 Check or create class
     let classDoc = await Class.findOne({ name: mergedData.class });
     if (!classDoc) {
@@ -209,7 +210,8 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const classId = searchParams.get("classId");
 
-  const students = await Student.find({ classId }); // Filter by class
+  const students = await Student.find({ classId }).populate("classId"); // Filter by class
+  console.log("student details",students)
   return Response.json(students);
 }
 

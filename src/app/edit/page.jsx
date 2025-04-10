@@ -5,7 +5,7 @@ import styled from "styled-components";
 
 // 🔹 Styled Components
 const Overlay = styled.div`
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -40,6 +40,11 @@ const Modal = styled.div`
       transform: scale(1);
       opacity: 1;
     }
+  }
+
+  @media (max-width: 480px) {
+    padding: 15px;
+    width: 95%;
   }
 `;
 
@@ -105,8 +110,6 @@ export default function EditStudentPage({ student, closePopup }) {
     }
   }, [student]);
 
-  if (!formData) return <div>Loading...</div>;
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -115,12 +118,11 @@ export default function EditStudentPage({ student, closePopup }) {
   const handleUpdate = async (e) => {
     e.preventDefault();
 
-    // 🧠 Ensure class, section, and rollNumber have fallback to old data
     const cleanedData = {
       ...formData,
-      class: formData.class || student.class,
-      section: formData.section || student.section,
-      rollNumber: formData.rollNumber || student.rollNumber,
+      class: formData.class || formData.classId?.name || student?.class || "",
+      section: formData.section || formData.sectionId?.name || student?.section || "",
+      rollNumber: formData.rollNumber || student?.rollNumber || "",
     };
 
     try {
@@ -142,6 +144,8 @@ export default function EditStudentPage({ student, closePopup }) {
       alert("❌ Error occurred during update.");
     }
   };
+
+  if (!formData) return <div>Loading...</div>;
 
   return (
     <Overlay>
@@ -168,7 +172,13 @@ export default function EditStudentPage({ student, closePopup }) {
             <option value="Other">Other</option>
           </Select>
           <Input type="text" name="rollNumber" value={formData.rollNumber} onChange={handleChange} required />
-          <Select name="class" value={formData.class || student.class} onChange={handleChange}>
+
+          <Select
+            name="class"
+            value={formData.class || formData.classId?.name || student?.class || ""}
+            onChange={handleChange}
+          >
+            <option value="">Select Class</option>
             <option value="Nursery">Nursery</option>
             <option value="LKG">LKG</option>
             <option value="UKG">UKG</option>
@@ -185,12 +195,19 @@ export default function EditStudentPage({ student, closePopup }) {
             <option value="11th">11th</option>
             <option value="12th">12th</option>
           </Select>
-          <Select name="section" value={formData.section || student.section} onChange={handleChange}>
+
+          <Select
+            name="section"
+            value={formData.section || formData.sectionId?.name || student?.section || ""}
+            onChange={handleChange}
+          >
+            <option value="">Select Section</option>
             <option value="A">Section A</option>
             <option value="B">Section B</option>
             <option value="C">Section C</option>
             <option value="D">Section D</option>
           </Select>
+
           <Button type="submit">Update Student</Button>
         </form>
       </Modal>

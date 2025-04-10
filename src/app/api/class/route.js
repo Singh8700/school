@@ -1,24 +1,23 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/db/config";
-import { Class } from "@/models/students"; // Make sure it's not "@/models/students"
+import { Class,Section,Student } from "@/models/students";
 
-// db connectDB
+
+// Connect to DB
 await connectDB();
 
 // 🔹 GET: Fetch All Classes
 export async function GET() {
   try {
-    const classes = await Class.find({}).populate("sections").populate("students");
-    console.log("class details is:",JSON.stringify(classes,null, 2));
+    const classes = await Class.find({})
+      .populate("sections")
+      .populate("students");
     return NextResponse.json(classes);
   } catch (error) {
     console.error("❌ GET error:", error);
     return NextResponse.json({ error: "Failed to fetch classes" }, { status: 500 });
   }
 }
-  
-
-
 
 // 🔹 POST: Add New Class
 export async function POST(req) {
@@ -36,7 +35,6 @@ export async function POST(req) {
 // 🔹 PUT: Update Class Details
 export async function PUT(req) {
   try {
-
     const { classId, name, section } = await req.json();
     const updatedClass = await Class.findByIdAndUpdate(
       classId,
@@ -52,10 +50,31 @@ export async function PUT(req) {
 
 // 🔹 DELETE: Delete a Class
 export async function DELETE(req) {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ error: "Class ID is required" }, { status: 400 });
+  }
+
   try {
-    const { classId } = await req.json();
-    await Class.findByIdAndDelete(classId);
-    return NextResponse.json({ message: "Class deleted successfully" });
+    await connectDB();
+
+    const classToDelete = await Class.findById(id);
+    if (!classToDelete) {
+      return NextResponse.json({ error: "Class not found" }, { status: 404 });
+    }
+
+    // Delete all related sections
+    await Section.deleteMany({ _id: { $in: classToDelete.sections } });
+
+    // Delete all related students
+    await Student.deleteMany({ _id: { $in: classToDelete.students } });
+
+    // Delete the class itself
+    await Class.findByIdAndDelete(id);
+
+    return NextResponse.json({ message: "Class deleted successfully" }, { status: 200 });
   } catch (error) {
     console.error("❌ DELETE error:", error);
     return NextResponse.json({ error: "Failed to delete class" }, { status: 500 });
